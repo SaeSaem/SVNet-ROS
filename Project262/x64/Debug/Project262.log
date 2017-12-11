@@ -1,0 +1,9 @@
+﻿  Source.cpp
+c:\users\21000\downloads\opencv3.2\build\include\opencv2\core\mat.hpp(2586): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+c:\users\21000\downloads\opencv3.2\build\include\opencv2\core\persistence.hpp : warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+c:\users\21000\downloads\opencv3.2\build\include\opencv2\core\utility.hpp : warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+c:\users\21000\downloads\opencv3.2\build\include\opencv2\core\utility.hpp : warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+c:\users\21000\downloads\opencv3.2\build\include\opencv2\imgproc.hpp : warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+c:\users\21000\downloads\opencv3.2\build\include\opencv2\imgproc.hpp(592): warning C4819: The file contains a character that cannot be represented in the current code page (949). Save the file in Unicode format to prevent data loss
+  Project262.vcxproj -> c:\users\21000\onedrive\문서\visual studio 2015\Projects\Project262\x64\Debug\Project262.exe
+  Project262.vcxproj -> c:\users\21000\onedrive\문서\visual studio 2015\Projects\Project262\x64\Debug\Project262.pdb (Partial PDB)
