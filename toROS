@@ -1,0 +1,201 @@
+/*
+이제 이 소스를 우분투로 옮기고, 퍼프블리 하는 것에 연계하면 됩니다. 
+그것을 getRT() 내에서 objectPoint2 = read_pcd(); 부분을 수정하면 됩니다.
+read_pcd()가 현재 pcd.file 을 불러와서 cloud 데이터를 접근하고 있는데,
+이것을 실시간으로 접근하도록 합니다. 
+
+*/
+
+#include <iostream>
+#include <pcl/io/pcd_io.h>
+#include <pcl/point_types.h>
+
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include "opencv2/calib3d/calib3d.hpp"
+#include "opencv2/imgproc/imgproc.hpp"
+
+using namespace cv;
+using namespace std;
+
+vector<Point3f> read_pcd();
+vector<Point2f> getRT();
+void display_image();
+std::vector<cv::Point2f> Generate2DPoints();
+std::vector<cv::Point3f> Generate3DPoints();
+
+// global variables
+Mat cameraMatrix(3, 3, DataType<double>::type);
+Mat distCoeffs(4, 1, DataType<double>::type);
+Mat image;
+vector<Point2f> twoDpoints;
+
+int main() {
+
+	twoDpoints = getRT(); // 2Dpoint from 3D point
+	display_image();
+
+	return 0;
+}
+
+std::vector<cv::Point2f> getRT() {
+	
+	std::vector<cv::Point2f> imagePoints = Generate2DPoints();
+	std::vector<cv::Point3f> objectPoints = Generate3DPoints();
+	std::vector<cv::Point3f> objectPoints2 = read_pcd();
+
+	cameraMatrix.at<double>(0, 0) = 1250.978;   // fx
+	cameraMatrix.at<double>(0, 1) = 0;
+	cameraMatrix.at<double>(0, 2) = 626.673;    // cx
+
+	cameraMatrix.at<double>(1, 0) = 0;
+	cameraMatrix.at<double>(1, 1) = 1257.900;    // fy
+	cameraMatrix.at<double>(1, 2) = 354.239;     // cy
+
+	cameraMatrix.at<double>(2, 0) = 0;
+	cameraMatrix.at<double>(2, 1) = 0;
+	cameraMatrix.at<double>(2, 2) = 1;
+
+//	cout << "cameraMatrix" << endl;
+//	cout << cameraMatrix << endl;
+
+	distCoeffs.at<double>(0) = -0.318184;
+	distCoeffs.at<double>(1) = 1.125858;
+	distCoeffs.at<double>(2) = 0.004153;
+	distCoeffs.at<double>(3) = -0.005453;
+
+	cv::Mat rvec(3, 1, cv::DataType<double>::type);
+	cv::Mat tvec(3, 1, cv::DataType<double>::type);
+
+	cv::solvePnP(objectPoints, imagePoints, cameraMatrix, distCoeffs, rvec, tvec);
+
+//	std::cout << "rvec: " << rvec << std::endl;
+//	std::cout << "tvec: " << tvec << std::endl;
+
+	Mat R;
+	Rodrigues(rvec, R);
+	Mat R_inv = R.inv();
+
+	// camera position (X,Y,Z)
+	Mat Cam_pos = -R_inv*tvec;
+	double* p = (double*)Cam_pos.data;
+	double X = p[0];
+	double Y = p[1];
+	double Z = p[2];
+
+
+	std::vector<cv::Point2f> projectedPoints2;
+	cv::projectPoints(objectPoints2, rvec, tvec, cameraMatrix, distCoeffs, projectedPoints2);
+
+	for (unsigned int i = 0; i < projectedPoints2.size(); ++i)
+	{
+		//	cout << "Projected to" << projectedPoints2[i] << endl;
+	}
+	return projectedPoints2;
+}
+
+void display_image() {
+
+	image = imread("result.jpg", CV_LOAD_IMAGE_COLOR);  
+	if (!image.data)  // Check for invalid input
+	{
+		cout << "Could not open or find the image" << std::endl;
+		return;
+	}
+
+	int x, y;
+	for (int i = 0; i < twoDpoints.size(); i++) {
+		x = twoDpoints[i].x;
+		y = twoDpoints[i].y;
+		circle(image, Point(x, y), 1, Scalar(0, 0, 255), 2);
+		//	image.at<Vec3b>(x, y)[2]= 255;
+	}
+
+	vector<Point2f> original = Generate2DPoints();
+	for (int i = 0; i < original.size(); i++) {
+		x = original[i].x;
+		y = original[i].y;
+		circle(image, Point(x, y), 1, Scalar(255, 0, 0), 2);
+		//	image.at<Vec3b>(x, y)[2]= 255;
+	}
+
+	//DISPLAY image
+	namedWindow("window", CV_WINDOW_AUTOSIZE); // Create a window for display.
+	imshow("window", image); // Show our image inside it.
+
+	cout << "image size: " << image.rows << " x " << image.cols << endl;
+
+	waitKey(0);
+	return;
+}
+
+std::vector<cv::Point3f> read_pcd()
+{
+	std::vector<cv::Point3f> points2;
+	pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
+
+	if (pcl::io::loadPCDFile<pcl::PointXYZ>("filter.pcd", *cloud) == -1) //* load the file
+	{
+		PCL_ERROR("Couldn't read file test_pcd.pcd \n");
+		return points2;
+	}
+	std::cout << "Loaded "
+		<< cloud->width * cloud->height
+		<< " data points from test_pcd.pcd with the following fields: "
+		<< std::endl;
+
+	//	std::vector<cv::Point3f> points2;
+	int x2, y2, z2;
+	for (size_t i = 0; i < cloud->points.size(); ++i) {
+
+		x2 = cloud->points[i].x * 100;
+		y2 = cloud->points[i].y * 100;
+		z2 = cloud->points[i].z * 100;
+		points2.push_back(cv::Point3f(x2, y2, z2));
+	}
+	cout << points2.size() << endl;
+	return points2;
+}
+
+
+std::vector<cv::Point2f> Generate2DPoints()
+{
+	std::vector<cv::Point2f> points;
+
+	float x, y;
+
+	x = 418; y = 340;
+	points.push_back(cv::Point2f(x, y));
+	x = 632; y = 358;
+	points.push_back(cv::Point2f(x, y));
+	x = 779; y = 297;
+	points.push_back(cv::Point2f(x, y));
+	x = 1068; y = 305;
+	points.push_back(cv::Point2f(x, y));
+	for (unsigned int i = 0; i < points.size(); ++i)
+	{
+		std::cout << points[i] << std::endl;
+	}
+	return points;
+}
+
+std::vector<cv::Point3f> Generate3DPoints()
+{
+	std::vector<cv::Point3f> points;
+	float x, y, z;
+	x = 465; y = 117; z = 0;
+	points.push_back(cv::Point3f(x, y, z));
+	x = 482; y = 29; z = 0;
+	points.push_back(cv::Point3f(x, y, z));
+	x = 365; y = -21; z = 20;
+	points.push_back(cv::Point3f(x, y, z));
+	x = 364; y = -101; z = 21;
+	points.push_back(cv::Point3f(x, y, z));
+
+	for (unsigned int i = 0; i < points.size(); ++i)
+	{
+		std::cout << points[i] << std::endl;
+	}
+
+	return points;
+}
