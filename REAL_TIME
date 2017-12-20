@@ -1,0 +1,211 @@
+#include <ros/ros.h>
+#include <pcl/point_cloud.h>
+#include <pcl_conversions/pcl_conversions.h>
+#include <sensor_msgs/PointCloud2.h>
+#include <pcl/filters/voxel_grid.h>
+
+#include <image_transport/image_transport.h>
+#include <cv_bridge/cv_bridge.h>
+#include <sensor_msgs/image_encodings.h>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include "opencv2/calib3d/calib3d.hpp"
+#include "opencv2/imgproc/imgproc.hpp"
+
+using namespace std;
+using namespace cv;
+
+static const string OPENCV_WINDOW = "Raw Image window";
+static const string OPENCV_WINDOW_1 = "Edge Detection";
+
+Mat cameraMatrix(3, 3, DataType<double>::type);
+Mat distCoeffs(4, 1, DataType<double>::type);
+Mat rvec(3, 1, DataType<double>::type);
+Mat tvec(3, 1, DataType<double>::type);
+Mat image, drawImg;
+vector<Point2f> save2Dpoint;
+
+
+vector<Point2f> get2Dpoint();
+Mat display_image(Mat image);
+void param_init();
+
+
+class fusion
+{
+  ros::NodeHandle nh_;
+  image_transport::ImageTransport it_;
+  image_transport::Subscriber image_sub_;
+  image_transport::Publisher image_pub_;
+  int img_count = 0;
+  
+  int loop_count = 0;
+  int cloud_count = 0;
+  ros::NodeHandle nh;
+  ros::Subscriber pcl_sub;
+  ros::Publisher pcl_pub;
+
+public:
+  fusion()
+    : it_(nh_)
+  {
+    // Subscribe to input video feed and publish output video feed
+    pcl_sub = nh.subscribe("Sensor/points", 10, &fusion::cloudCB, this);
+    pcl_pub = nh.advertise<sensor_msgs::PointCloud2>("pcl_filtered", 1);    
+
+    image_sub_ = it_.subscribe("/image_raw", 1, &fusion::imageCb, this);
+    image_pub_ = it_.advertise("/edge_detector/raw_image", 1);
+    cv::namedWindow(OPENCV_WINDOW);
+ //   cout << "loop_count: " << loop_count << endl;
+ //   loop_count++;
+  }
+
+  ~fusion()
+  {
+    cv::destroyWindow(OPENCV_WINDOW);
+  }
+
+  void imageCb(const sensor_msgs::ImageConstPtr& msg)
+  {
+
+    cv_bridge::CvImagePtr cv_ptr;
+    namespace enc = sensor_msgs::image_encodings;
+
+    try
+    {
+      cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
+    }
+    catch (cv_bridge::Exception& e)
+    {
+      ROS_ERROR("cv_bridge exception: %s", e.what());
+      return;
+    }
+
+    // Draw an example circle on the video stream
+    if (cv_ptr->image.rows > 400 && cv_ptr->image.cols > 600){
+
+	mapping(cv_ptr->image);
+    	image_pub_.publish(cv_ptr->toImageMsg());
+
+	}
+  }
+  void mapping(Mat img)
+  {
+	//start code
+	int x, y;
+
+
+	//cout << "save2Dpoint size: "<<save2Dpoint.size() << endl;
+	
+        for (int i = 0; i < save2Dpoint.size(); i++) {
+		x = save2Dpoint[i].x;
+		y = save2Dpoint[i].y;
+		circle(img, Point(x, y), 1, Scalar(0, 0, 255), -1);
+	}
+	
+	//circle(img, Point(100, 200), 5, Scalar(0, 255, 0), 2);
+	imshow(OPENCV_WINDOW, img);	
+	waitKey(95);
+
+	cout << "image num: " << img_count << endl;
+	img_count++;
+  }
+
+  void cloudCB(const sensor_msgs::PointCloud2& input)
+    {
+        pcl::PointCloud<pcl::PointXYZ> cloud;
+        pcl::PointCloud<pcl::PointXYZ> cloud_filtered;
+        sensor_msgs::PointCloud2 output;
+
+        pcl::fromROSMsg(input, cloud);
+	
+	std::vector<cv::Point3f> points2;
+	int x, y, z;
+	for (size_t i = 0; i < cloud.points.size(); ++i) {
+
+		x = cloud.points[i].x * 100;
+		y = cloud.points[i].y * 100;
+		z = cloud.points[i].z * 100;
+		points2.push_back(cv::Point3f(x, y, z));
+	}
+
+	
+//	cout << "************************************" << endl;
+//	cout << points2 << endl;
+
+	//vector<Point3f> objectPoints2 = points2;
+	vector<Point2f> projectedPoints2;
+//      projectPoints(objectPoints2, rvec, tvec, cameraMatrix, distCoeffs, projectedPoints2);
+	projectPoints(points2, rvec, tvec, cameraMatrix, distCoeffs, projectedPoints2);
+		
+	
+	save2Dpoint = projectedPoints2;
+//	cout << save2Dpoint << endl;
+	
+	//cout << save2Dpoint[10].x << " " << save2Dpoint[10].y << endl;
+  	
+
+	//mapping(cv_ptr->image);
+	
+        cout << "cloud num: "<<cloud_count << endl;
+	cloud_count++;	
+
+	
+//	return points2;	
+
+
+//	pcl::VoxelGrid<pcl::PointXYZ> vox_obj;
+//	vox_obj.setInputCloud (cloud.makeShared());
+
+//	vox_obj.setLeafSize (0.1f, 0.1f, 0.1f);
+	
+//	vox_obj.filter(cloud_filtered);
+
+        pcl::toROSMsg(cloud_filtered, output);
+    	output.header.frame_id = "point_cloud";
+
+        pcl_pub.publish(output);
+    }	
+ 
+};
+
+
+
+main(int argc, char** argv)
+{
+    param_init();
+    ros::init(argc, argv, "pcl_and_opencv");
+    ROS_INFO("Started two Node");
+    fusion ic;
+
+    ros::spin();
+
+    return 0;
+}
+
+void param_init() {
+	cameraMatrix.at<double>(0, 0) = 1250.978;   // fx
+	cameraMatrix.at<double>(0, 1) = 0;
+	cameraMatrix.at<double>(0, 2) = 626.673;    // cx
+
+	cameraMatrix.at<double>(1, 0) = 0;
+	cameraMatrix.at<double>(1, 1) = 1257.900;    // fy
+	cameraMatrix.at<double>(1, 2) = 354.239;     // cy
+
+	cameraMatrix.at<double>(2, 0) = 0;
+	cameraMatrix.at<double>(2, 1) = 0;
+	cameraMatrix.at<double>(2, 2) = 1;
+
+	distCoeffs.at<double>(0) = -0.318184;
+	distCoeffs.at<double>(1) = 1.125858;
+	distCoeffs.at<double>(2) = 0.004153;
+	distCoeffs.at<double>(3) = -0.005453;
+
+	rvec.at<double>(0) = 1.300390386513138;
+	rvec.at<double>(1) = -1.095557374421685;
+	rvec.at<double>(2) = 1.171722002793529;
+
+	tvec.at<double>(0) = -17.74415636162148;
+	tvec.at<double>(1) = -0.9163904987566065;
+	tvec.at<double>(2) = -5.427465320880245;
+}
