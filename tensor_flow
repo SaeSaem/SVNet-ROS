@@ -1,0 +1,43 @@
+https://www.facebook.com/groups/TensorFlowKR/?hc_ref=ARScpSu5Ro979kzHsy5PFaVG3BRTR-Jn6DpE8VrcUzPHxuqZ87IQkOdmtFb9Qzof51c
+
+저처럼 머신러닝,딥러닝 입문해 보시는 분들께 자그마한 정보가 될까 하여 조금 길게 포스팅 해 봅니다. 제가 6개월 정도 달려보았는데요. 한국어 강좌도 좋은게 많습니다.
+
+1. 처음 시작은 김성훈 교수님 유튜브 강의로 입문하시는게 최고의 선택인 듯 합니다. 쉽게 풀어주시면서 직관적인 이해를 도와주시는 부분이 참 많습니다.
+https://www.youtube.com/playlist…
+
+2. 더 진도를 나가려면 기초를 다지는 것이 좋았습니다.(제 개인적으로는…)
+
+아래 2개 강좌는 반드시 듣는게 매우 중요할 듯 합니다.
+
+(1) 선형대수학 강좌
+https://www.youtube.com/playlist…
+(2) 확률통계 강좌
+http://www.kocw.net/home/search/kemView.do?kemId=1056974
+
+위 2개 강의를 듣고 나면, 신경망에 대한 조금은 본질적인 개념 이해나 차원축소 기법들 이해하는데 도움이 되고 수식 notation이 눈에 많이 들어오는 것 같았습니다.
+
+그리고 카이스트 문일철 교수님 강의도 좋은데, 바로 들어가면 어렵더군요.
+
+위 3개 강좌를 듣고 들어가시는 게 아마도 좋지 않을까 합니다. 그리고 문교수님 강의 듣기 전에 하나 더 선행하면 좋을 듯 합니다.
+
+3. 충북대 이건명 교수님 강의 중에서 ‘탐색과 최적화’ 부분을 듣고 가시는게 좋아 보입니다.
+http://www.kocw.net/home/search/kemView.do?kemId=1170523
+
+위 4개 강좌를 듣고 나면, 윤곽이 잡힙니다.
+
+4. 이렇게 해서 KOOC에 있는 카이스트 문일철 교수님 강의는 마지막에 들으면 이제는 많이 다가오는 것 같습니다.
+
+(1) k-means, gmm(gaussian mixture model), em(expectation & maximization) 강의를 들으면 variational inference의 기초가 잡힐 듯 합니다.
+(2) hmm(hidden markov model) 강의를 들으면 rnn이 생각나고 또한 bidirectional rnn이 생각날 것으로 보입니다.
+(3) 샘플링 쪽을 들으면 mcmc 기초가 잡히고 gibbs sampling을 들으면 RBM과 DBN이 생각날 듯 합니다.
+
+이렇게 하고 TF-KR에서 진행하는 PR12 논문 리뷰 동영상을 보면, 이제는 많이 친숙하게 다가오지 않을까 합니다.
+
+저는 정확히는 모르고, 대충대충 이런게 있구나 정도만 아는 수준이라 더 자세히 포스팅 하기는 어려울 듯 합니다. 다만, 기초가 매우 중요하다는 느낌은 생기는 듯 합니다.
+
+쬐끔이나마 정보가 될런지 모르겠습니다.
+
+아… 그리고 문교수님 강의 들으면서 앤드류 교수님 강의 병행하면 시너지가 많이 날 듯 합니다.
+
+마지막으로, cnn 쪽은 라온피플 블로그가 매우 좋은 듯 합니다. 한번 쭉 다 읽어 보시면(댓글 포함) 도움 많이 되는 듯 합니다.
+http://blog.naver.com/laonple/220469250655
