@@ -1,0 +1,61 @@
+#include "opencv2/opencv.hpp"
+using namespace cv;
+
+int main(int, char**)
+{
+    //VideoCapture cap(0); // open the default camera
+	VideoCapture cap("C:\\Users\\21000\\Downloads\\office.mp4");
+    if (!cap.isOpened())  // check if we succeeded
+        return -1;
+
+    //Ptr<BackgroundSubtractor> pMOG = new BackgroundSubtractorMOG2();
+
+    //Mat fg_mask;
+    Mat frame;
+    int count = -1;
+
+    for (;;)
+    {
+        // Get frame
+        cap >> frame; // get a new frame from camera
+
+        // Update counter
+        ++count;
+
+        // Background subtraction
+        //pMOG->operator()(frame, fg_mask);
+
+        //imshow("frame", frame);
+        //imshow("fg_mask", fg_mask);
+
+        // Save foreground mask
+		if (count < 10) {
+			string name = "" + std::to_string(count) + ".png";
+			imwrite("D:\\StradVision\\mp4toPng\\34\\images\\00000" + name, frame);
+		}
+		else if (count < 100) {
+			string name = "" + std::to_string(count) + ".png";
+			imwrite("D:\\StradVision\\mp4toPng\\34\\images\\0000" + name, frame);
+
+		}
+		else if (count < 1000) {
+			string name = "" + std::to_string(count) + ".png";
+			imwrite("D:\\StradVision\\mp4toPng\\34\\images\\000" + name, frame);
+
+		}
+		
+		else if (count < 10000) {
+			string name = "" + std::to_string(count) + ".png";
+			imwrite("D:\\StradVision\\mp4toPng\\34\\images\\00" + name, frame);
+
+		}
+
+		if (count == 4540) {
+			return 0;
+		}
+
+        if (waitKey(1) >= 0) break;
+    }
+    // the camera will be deinitialized automatically in VideoCapture destructor
+    return 0;
+}
